@@ -1,0 +1,242 @@
+import java.util.ArrayList;
+
+// Clase que administra todos los productos dentro del inventario
+public class inventario {
+
+    // Lista dinámica que almacena todos los productos
+    private ArrayList<producto> productos = new ArrayList<>();
+
+    // Método para verificar si ya existe un producto con cierto ID
+
+    public boolean existeID(int id) {
+        for (producto p : productos) {
+            if (p.getId() == id) return true; // ID encontrado
+        }
+        return false; // ID no encontrado
+    }
+
+    // Método que agrega un nuevo producto al inventario
+
+    public void agregarProducto(producto p) {
+        productos.add(p);
+        System.out.println("Producto agregado correctamente.\n");
+    }
+
+    // Método que imprime en pantalla todos los productos del inventario
+
+    public void consultarInventario() {
+        if (productos.isEmpty()) {
+            System.out.println("El inventario está vacío.\n");
+            return;
+        }
+
+        System.out.println("\n--- Inventario ---");
+        for (producto p : productos) {
+            System.out.println(p);
+
+            // Usa el método toString()
+        }
+        System.out.println();
+    }
+
+    // Método que actualiza cantidad y precio de un producto a partir de su ID
+
+    public void actualizarProducto(int id, int nuevaCantidad, double nuevoPrecio) {
+        for (producto p : productos) {
+            if (p.getId() == id) { // Se encontró el producto
+                p.setCantidad(nuevaCantidad);
+                p.setPrecio(nuevoPrecio);
+                System.out.println("Producto actualizado correctamente.\n");
+                return;
+            }
+        }
+        // Si no se encontró el producto
+
+        System.out.println("No se encontró un producto con ese ID.\n");
+    }
+
+    // Método que elimina un producto del inventario según su ID
+
+    public void eliminarProducto(int id) {
+        // removeIf elimina los elementos que cumplan la condición
+        productos.removeIf(p -> p.getId() == id);
+        System.out.println("Producto eliminado.\n");
+    }
+
+    // Método que calcula el valor total del inventario
+
+    public double calcularValorTotal() {
+        double total = 0;
+
+        // Recorrer todos los productos y sumar (cantidad * precio)
+
+        for (producto p : productos) {
+            total += p.getCantidad() * p.getPrecio();
+        }
+
+        return total;
+    }
+}
+
+
+// Clase que representa un producto dentro del inventario
+public class producto {
+
+    // Atributo que identifica de manera única al producto
+    private int id;
+
+    // Nombre del producto
+    private String nombre;
+
+    // Cantidad disponible del producto
+    private int cantidad;
+
+    // Precio por unidad del producto
+    private double precio;
+
+    // Constructor que inicializa un nuevo producto con sus atributos
+    public producto(int id, String nombre, int cantidad, double precio) {
+        this.id = id;
+        this.nombre = nombre;
+        this.cantidad = cantidad;
+        this.precio = precio;
+    }
+
+    // Métodos getter y setter para acceder o modificar el ID
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    // Métodos getter y setter para el nombre
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    // Métodos getter y setter para la cantidad
+    public int getCantidad() { return cantidad; }
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+
+    // Métodos getter y setter para el precio
+    public double getPrecio() { return precio; }
+    public void setPrecio(double precio) { this.precio = precio; }
+
+    // Método que devuelve la información del producto como un texto formateado
+    @Override
+    public String toString() {
+        return "ID: " + id + " | Nombre: " + nombre +
+                " | Cantidad: " + cantidad + " | Precio: $" + precio;
+    }
+}
+
+import java.util.Scanner;
+
+// Clase principal que ejecuta el sistema de inventario mediante consola
+public class Main {
+
+    public static void main(String[] args) {
+
+        // Se crea un inventario vacío
+        inventario inventario = new inventario();
+
+        // Scanner para leer datos del usuario
+        Scanner sc = new Scanner(System.in);
+
+        int opcion; // Variable para almacenar la opción seleccionada
+
+        // Ciclo que mantiene el menú activo hasta que el usuario elija salir
+        do {
+            // Menú de opciones
+            System.out.println("===== Sistema de Gestión de Inventario =====");
+            System.out.println("1. Agregar producto");
+            System.out.println("2. Consultar inventario");
+            System.out.println("3. Actualizar producto");
+            System.out.println("4. Eliminar producto");
+            System.out.println("5. Valor total del inventario");
+            System.out.println("6. Acerca de");
+            System.out.println("7. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            opcion = sc.nextInt();
+
+            // Switch según la opción elegida
+            switch (opcion) {
+
+                // Opción 1: Agregar un producto
+                case 1:
+                    System.out.print("Ingrese ID: ");
+                    int id = sc.nextInt();
+
+                    // Validar que el ID no esté repetido
+                    if (inventario.existeID(id)) {
+                        System.out.println("ERROR: Ya existe un producto con ese ID.\n");
+                        break;
+                    }
+
+                    sc.nextLine(); // Limpiar buffer
+                    System.out.print("Ingrese nombre: ");
+                    String nombre = sc.nextLine();
+
+                    System.out.print("Ingrese cantidad: ");
+                    int cantidad = sc.nextInt();
+
+                    System.out.print("Ingrese precio: ");
+                    double precio = sc.nextDouble();
+
+                    // Crear y agregar producto
+                    inventario.agregarProducto(
+                            new producto(id, nombre, cantidad, precio)
+                    );
+                    break;
+
+                // Opción 2: Mostrar inventario
+                case 2:
+                    inventario.consultarInventario();
+                    break;
+
+                // Opción 3: Actualizar un producto
+                case 3:
+                    System.out.print("Ingrese ID a actualizar: ");
+                    int idActualizar = sc.nextInt();
+
+                    System.out.print("Nueva cantidad: ");
+                    int nuevaCant = sc.nextInt();
+
+                    System.out.print("Nuevo precio: ");
+                    double nuevoPrecio = sc.nextDouble();
+
+                    inventario.actualizarProducto(idActualizar, nuevaCant, nuevoPrecio);
+                    break;
+
+                // Opción 4: Eliminar un producto
+                case 4:
+                    System.out.print("Ingrese ID a eliminar: ");
+                    int idEliminar = sc.nextInt();
+                    inventario.eliminarProducto(idEliminar);
+                    break;
+
+                // Opción 5: Calcular valor total del inventario
+                case 5:
+                    System.out.println("Valor total del inventario: $" + inventario.calcularValorTotal() + "\n");
+                    break;
+
+                // Opción 6: Información del creador
+                case 6:
+                    System.out.println("\n=== Acerca de ===");
+                    System.out.println("Sistema creado por:");
+                    System.out.println("• Cristian Quiroga");
+                    System.out.println("• Integrante 2");
+                    System.out.println("• Integrante 3");
+                    System.out.println("Eslogan: “Código con propósito”.\n");
+                    break;
+
+                // Opción 7: Salir del sistema
+                case 7:
+                    System.out.println("Saliendo del sistema...");
+                    break;
+
+                // Si la opción es inválida
+                default:
+                    System.out.println("Opción inválida.\n");
+            }
+
+        } while (opcion != 7); // Fin del ciclo cuando se elige salir
+    }
+}
