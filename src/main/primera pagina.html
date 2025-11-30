@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGI - Gestión de Inventario</title>
+
+    <style>
+        :root {
+            --color-primary: #1a73e8;
+            --color-secondary: #0f9d58;
+            --color-bg: #f8f9fa;
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            --shadow-deep: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+            --color-red: #ea4335;
+            --color-yellow: #fbbc04;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-bg);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .full-screen-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 3000;
+            background-color: #ffffff;
+            opacity: 1;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        .hidden-section {
+            opacity: 0 !important;
+            visibility: hidden;
+            transform: translateY(-100%);
+        }
+
+        #bienvenida h1 {
+            font-size: 4em;
+            color: var(--color-primary);
+            animation: bounceIn 1s forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .login-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-deep);
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+        }
+
+        .login-btn {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1em;
+        }
+
+        #app-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            display: none;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid #dadce0;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-deep);
+            border-color: var(--color-primary);
+        }
+
+        .form-content {
+            background: #f1f3f4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .btn-table {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .btn-edit { background-color: var(--color-yellow); }
+        .btn-delete { background-color: var(--color-red); color: white; }
+        .btn-stock { background-color: var(--color-secondary); color: white; }
+        .btn-submit { background-color: var(--color-primary); color: white; padding: 10px 15px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+<section id="bienvenida" class="full-screen-section">
+    <h1>Hola, Bienvenidos al SGI</h1>
+</section>
+
+<section id="login-section" class="full-screen-section hidden-section" style="background-color: var(--color-bg);">
+    <div class="login-card">
+        <h2>Ingrese su Usuario y Contraseña</h2>
+        <form id="login-form">
+            <div class="input-group"><input type="text" id="username" placeholder="Usuario" required></div>
+            <div class="input-group"><input type="password" id="password" placeholder="Contraseña" required></div>
+            <button type="submit" class="login-btn">Acceder</button>
+            <p>Demo: admin / 123</p>
+        </form>
+    </div>
+</section>
+
+<div id="app-content">
+    <header style="display:flex;justify-content:space-between;">
+        <h2>Menú Principal de Gestión</h2>
+        <button onclick="logout()" class="btn-delete" style="padding:8px 15px;">Cerrar Sesión</button>
+    </header>
+
+    <div class="menu-grid">
+        <div class="menu-item" onclick="mostrarSeccion('agregar')"><h3>1. Agregar Producto</h3></div>
+        <div class="menu-item" onclick="mostrarSeccion('quitar')"><h3>2. Quitar Producto</h3></div>
+        <div class="menu-item" onclick="mostrarSeccion('actualizar')"><h3>3. Actualizar Producto</h3></div>
+        <div class="menu-item" onclick="mostrarSeccion('inventario')"><h3>4. Mostrar Inventario</h3></div>
+    </div>
+
+    <div id="agregar-content" class="form-content">
+        <h3>Agregar Producto</h3>
+        <form id="form-agregar">
+            <div class="form-group"><label>ID:</label><input id="add-id" required></div>
+            <div class="form-group"><label>Nombre:</label><input id="add-nombre" required></div>
+            <div class="form-group"><label>Cantidad:</label><input type="number" id="add-cantidad" min="1" value="1" required></div>
+            <div class="form-group"><label>Precio:</label><input type="number" id="add-precio" min="0.01" step="0.01" required></div>
+            <button class="btn-submit" type="submit">Guardar</button>
+        </form>
+    </div>
+
+    <div id="quitar-content" class="form-content">
+        <h3>Quitar Producto</h3>
+        <button class="btn-stock" onclick="mostrarSeccion('inventario')">Ver Inventario</button>
+    </div>
+
+    <div id="actualizar-content" class="form-content">
+        <h3>Actualizar Producto</h3>
+        <button class="btn-edit" onclick="mostrarSeccion('inventario')">Ver Inventario</button>
+    </div>
+
+    <div id="inventario-content" class="form-content">
+        <h3>Inventario Actual</h3>
+        <table class="data-table" id="tabla-inventario-body">
+            <thead>
+            <tr>
+                <th>ID</th><th>Nombre</th><th>Cantidad</th><th>Precio</th><th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const VALID_USER = 'admin';
+    const VALID_PASS = '123';
+
+    let inventario = [
+        { id: 'LAP-101', nombre: 'Laptop Standard', cantidad: 5, precio: 800.00 },
+        { id: 'CEL-205', nombre: 'Smartphone Pro', cantidad: 12, precio: 450.50 }
+    ];
+
+    const bienvenidaSection = document.getElementById('bienvenida');
+    const loginSection = document.getElementById('login-section');
+    const appContent = document.getElementById('app-content');
+    const tablaBody = document.querySelector('#tabla-inventario-body tbody');
+    const loginForm = document.getElementById('login-form');
+    const formAgregar = document.getElementById('form-agregar');
+
+    const formContents = {
+        'agregar': document.getElementById('agregar-content'),
+        'quitar': document.getElementById('quitar-content'),
+        'actualizar': document.getElementById('actualizar-content'),
+        'inventario': document.getElementById('inventario-content')
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderizarTabla();
+
+        setTimeout(() => bienvenidaSection.classList.add('hidden-section'), 2000);
+        setTimeout(() => {
+            bienvenidaSection.style.display = 'none';
+            loginSection.classList.remove('hidden-section');
+        }, 2500);
+    });
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let u = username.value;
+        let p = password.value;
+
+        if (u === VALID_USER && p === VALID_PASS) {
+            loginSection.classList.add('hidden-section');
+            setTimeout(() => {
+                loginSection.style.display = 'none';
+                appContent.style.display = 'block';
+            }, 500);
+        } else {
+            alert("Usuario incorrecto");
+        }
+    });
+
+    function logout() {
+        if (confirm("¿Cerrar sesión?")) {
+            appContent.style.display = 'none';
+            loginSection.style.display = 'flex';
+            loginSection.classList.remove('hidden-section');
+            loginForm.reset();
+        }
+    }
+
+    function mostrarSeccion(id) {
+        Object.values(formContents).forEach(sec => sec.style.display = 'none');
+        formContents[id].style.display = 'block';
+    }
+
+    formAgregar.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const nuevo = {
+            id: add-id.value.toUpperCase(),
+            nombre: add-nombre.value,
+            cantidad: Number(add-cantidad.value),
+            precio: Number(add-precio.value)
+        };
+
+        if (inventario.some(p => p.id === nuevo.id)) {
+            alert("Ese ID ya existe");
+            return;
+        }
+
+        inventario.push(nuevo);
+        renderizarTabla();
+        alert("Producto agregado");
+        formAgregar.reset();
+        mostrarSeccion('inventario');
+    });
+
+    function renderizarTabla() {
+        tablaBody.innerHTML = "";
+
+        inventario.forEach(p => {
+            const fila = tablaBody.insertRow();
+            fila.insertCell().textContent = p.id;
+            fila.insertCell().textContent = p.nombre;
+
+            const ctd = fila.insertCell();
+            ctd.id = `cantidad-${p.id}`;
+            ctd.textContent = p.cantidad;
+
+            fila.insertCell().textContent = `$${p.precio}`;
+
+            const acciones = fila.insertCell();
+
+            const btnAdd = document.createElement("button");
+            btnAdd.textContent = "+";
+            btnAdd.className = "btn-table btn-stock";
+            btnAdd.onclick = () => actualizarCantidad(p.id, 1);
+
+            const btnSub = document.createElement("button");
+            btnSub.textContent = "-";
+            btnSub.className = "btn-table btn-edit";
+            btnSub.onclick = () => actualizarCantidad(p.id, -1);
+
+            const btnDel = document.createElement("button");
+            btnDel.textContent = "Eliminar";
+            btnDel.className = "btn-table btn-delete";
+            btnDel.onclick = () => eliminarProducto(p.id);
+
+            acciones.appendChild(btnAdd);
+            acciones.appendChild(btnSub);
+            acciones.appendChild(btnDel);
+        });
+    }
+
+    function actualizarCantidad(id, cambio) {
+        const prod = inventario.find(p => p.id === id);
+        if (!prod) return;
+
+        const nuevo = prod.cantidad + cambio;
+        if (nuevo < 0) return alert("No puede ser negativo");
+
+        prod.cantidad = nuevo;
+        document.getElementById(`cantidad-${id}`).textContent = nuevo;
+    }
+
+    function eliminarProducto(id) {
+        if (!confirm("¿Eliminar producto?")) return;
+
+        inventario = inventario.filter(p => p.id !== id);
+        renderizarTabla();
+    }
+</script>
+
+</body>
+</html>
